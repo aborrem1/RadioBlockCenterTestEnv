@@ -12,7 +12,7 @@ def startRBC5():
 
     Rbc5Mgr.StartVM()
     time.sleep(2)
-    #Rbc5Mgr.StartRBCOnHost()
+    Rbc5Mgr.StartRBCOnHost()
 
 def startRBC6():
     Rbc6Mgr = RBCUtils(workingDir="C:\\ETCS2-TRK_TestEnv_93B\\Simu\\MooN_Simu\\RBC6\\", RBCVersion="RBC_MooN_93000", RBCName="RBC6_93B", RBCip="192.168.56.56")
@@ -47,11 +47,11 @@ if __name__ == "__main__":
     print("Current working directory: {0}".format(os.getcwd()))
 
     threads = list()
-    #x = threading.Thread(target=startRBC5)
-    #threads.append(x)
-    #x.start()
+    x = threading.Thread(target=stopRBC5)
+    threads.append(x)
+    x.start()
 
-    y = threading.Thread(target=startRBC6)
+    y = threading.Thread(target=stopRBC6)
     threads.append(y)
     y.start()
 
