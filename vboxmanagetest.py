@@ -1,6 +1,7 @@
 import subprocess
 import re
 
+
 VBoxPath = 'C:\\Program Files\\Oracle\\VirtualBox\\'
 
 result = subprocess.run(['VBoxManage', 'list', 'runningvms'], shell=True, cwd=VBoxPath, capture_output=True, text=True)
