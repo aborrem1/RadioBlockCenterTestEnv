@@ -3,48 +3,66 @@ import struct
 import time
 import xmlrpc.client
 import sys
-UDP_IP = "127.0.0.1"
-UDP_PORT = 7040
+UDP_IP = '175.175.175.132'
+UDP_PORT = 7010
+MCAST_GRP = '225.0.0.0' 
+MCAST_PORT = 5007
 
 def getXML(params, method):
     # params = ({"tracks": ['track1', 'track2', 'track3']}, )
     return xmlrpc.client.dumps(params, methodname=method, methodresponse=None, encoding=None, allow_none=True)
 
-def SendDataToUDP(data, portnum, help):
-    sock = socket.socket(socket.AF_INET, # Internet
-                        socket.SOCK_DGRAM) # UDP
-    print("---------------------------------------------------------")
-    # sock.connect((UDP_IP, UDP_PORT))
-    ttl = struct.pack('b', 32)  #// 32 
+def SendDataToUDP(data, help):
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+
+    mreq = socket.inet_aton(MCAST_GRP) + socket.inet_aton(UDP_IP)
+
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+    ttl = struct.pack('b', 1)  #// 32 
+
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
-    # sock.send(bytes(data.encode('ascii')))
-    sock.sendto(bytes(data.encode('ascii')), ('127.0.0.1', portnum))
+
+    sock.sendto(data.encode(), (MCAST_GRP, UDP_PORT))
+
     sock.close()
+
     print("Data sent for", help)
 
 
 p = ({'trainId': '1001', 'trainLength': 8000, 'head': 'RIGHT', 'antennaPosition': 0, 'direction': 'LEFT_RIGHT'},)
 xml = getXML(p, 'TRAINMANAGEMENT.trainInfo')
-SendDataToUDP(xml, 7040, "TrainInfo")
+#SendDataToUDP(xml, 7040, "TrainInfo")
 time.sleep(1)
 
 p = ({'trainId': 1001, 'position': 0.0, 'speed': 0.0},)
 xml = getXML(p, 'TRAINMANAGEMENT.posReport')
-SendDataToUDP(xml, 7040, 'TRAINMANAGEMENT.posReport')
+#SendDataToUDP(xml, 7040, 'TRAINMANAGEMENT.posReport')
 time.sleep(1)
 
 p = ({'trainID': 1001, 'nidEngine': '12345', 'frame': 'MDEyMzQ1Njc4OUFCQw==', 'frameLength': 13},)
 xml = getXML(p, 'RBCMESSAGE.Report')
-SendDataToUDP(xml, 7040, "RBCMESSAGE.Report")
+#SendDataToUDP(xml, 7040, "RBCMESSAGE.Report")
 time.sleep(1)
 
 
 p = ({'application': 'TEST', 'time': 0.0, 'callId': 'TEST.GET_TRAIN_LIST.1', 'method': 'GET_TRAIN_LIST', 'parameters': {'TimeOut': 10}},)
 xml = getXML(p, 'AUTOMATION.execute')
-SendDataToUDP(xml, 7010, 'AUTOMATION.execute')
+#SendDataToUDP(xml, 7010, 'AUTOMATION.execute')
 time.sleep(1)
 
 
+appName = 'NTG_NOT_SCALABLE'
+counter = 1
+
+#p = ({'application': appName, 'time': 0.0, 'callId': appName + '.MUTE_APP.' + str(counter) , 'method': 'MUTE_APP', 'parameters': {'ACTIVATE': False}},)
+
+p = ({'application': appName, 'time': 0.0, 'callId': appName + '.DISCONNECT_EVC.' + str(counter) , 'method': 'DISCONNECT_EVC', 'parameters': {'EVC_ID': 1001}},)
+
+xml = getXML(p, 'AUTOMATION.execute')
+SendDataToUDP(xml, 'AUTOMATION.execute')
+time.sleep(1)
 
 # old
 """

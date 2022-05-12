@@ -62,17 +62,20 @@ class RBCUtils:
 
         sout = stdout.read().decode("utf8")
 
+        result = ''
         if (len(sout) != 0):
             # print(stdout.read().decode("utf8"))
-            print(now.strftime(timeformat) + 'STDOUT: ' + sout)
+            result = now.strftime(timeformat) + 'STDOUT: ' + sout
+            print(result)
+
 
         serr = stderr.read().decode("utf8")
 
         if (len(serr) != 0):
             # print(stderr.read().decode("utf8"))
+            result = result + now.strftime(timeformat) + f'STDERR: ' + serr
             print(now.strftime(timeformat) + f'STDERR: ' + serr)
 
-        result = stdout, stderr
         return result
 
         # if stderr.channel.recv_exit_status() != 0:
@@ -85,8 +88,13 @@ class RBCUtils:
 
     def StartRBCOnHost(self):
 
-        self._client.connect(self._RBCip, port=self._RBCport,
+        try:
+            self._client.connect(self._RBCip, port=self._RBCport,
                              username=self._RBCuser, password=self._RBCpass)
+        except socket.error:
+            self.log(str(socket.error))
+            self._client.close()   
+                              
         try:
             scp = SCPClient(self._client.get_transport())
 
@@ -134,8 +142,13 @@ class RBCUtils:
 
     def StopRBCOnHost(self):
         self.log('Stopping the MooN Simulator of ' + self._RBCName)
-        self._client.connect(self._RBCip, port=self._RBCport,
+
+        try:
+            self._client.connect(self._RBCip, port=self._RBCport,
                              username=self._RBCuser, password=self._RBCpass)
+        except socket.error:
+            self.log(str(socket.error))
+            self._client.close()
         try:
             cmds = 'sudo rm -f /MooNSimu/LDS/Config/sipc_ntw_0_to_4'
             self.sendCmd(cmds)
@@ -462,12 +475,14 @@ class RBCUtils:
                              username=self._RBCuser, password=self._RBCpass)
         try:
             cmds = 'netstat -tn'
-            self.sendCmd(cmds)
+            result = self.sendCmd(cmds)
 
             cmds = 'netstat -au'
-            self.sendCmd(cmds)
+            result = result + self.sendCmd(cmds)
         finally:
             self._client.close()
+
+        return result
 
     def ping(self):
         # ping with specific source adapter to avoid default gateway
